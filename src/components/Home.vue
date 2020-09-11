@@ -11,13 +11,17 @@
     <!-- 主体部分 -->
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside width="200px">
-        <div class="toggle-button">|||</div>
+      <el-aside :width="isCollapse?'64px':'200px'">
+        <div class="toggle-button" @click="toggleCollapse">|||</div>
         <!-- 侧边栏菜单 -->
         <el-menu background-color="#333744"
-        text-color="#fff"
         active-text-color="#409EFF"
-        unique-opened>
+        text-color="#fff"
+        unique-opened
+        :collapse-transition="false"
+        :collapse="isCollapse"
+        :default-active="activePath"
+        router>
         <!-- 一级菜单 -->
           <el-submenu :index="item.id + ''" v-for="item in menuList" :key="item.id">
             <!-- 一级菜单的模板区域 -->
@@ -28,7 +32,10 @@
               <span> {{item.authName}} </span>
             </template>
             <!-- 二级菜单 -->
-            <el-menu-item index="1" v-for="subItem in item.children" :key="subItem.id">
+            <el-menu-item :index="'/' + subItem.path"
+            v-for="subItem in item.children"
+            @click="saveNavState('/' + subItem.path)"
+            :key="subItem.id">
               <template slot="title">
               <!-- 图标 -->
               <i class="el-icon-menu"></i>
@@ -40,7 +47,10 @@
         </el-menu>
       </el-aside>
       <!-- 内容区 -->
-      <el-main>Main</el-main>
+      <el-main>
+        <!-- 路由 -->
+        <router-view></router-view>
+      </el-main>
     </el-container>
   </el-container>
 </template>
@@ -56,12 +66,14 @@ export default {
         101: 'iconfont icon-shangpin',
         102: 'iconfont icon-danju',
         145: 'iconfont icon-baobiao'
-
-      }
+      },
+      isCollapse: true,
+      activePath: ''
     }
   },
   created() {
     this.getMenuList()
+    this.activePath = window.sessionStorage.getItem('activePath')
   },
   methods: {
     logout() {
@@ -74,6 +86,15 @@ export default {
       if (res.meta.status !== 200) return this.$message.error(res.data.msg)
       this.menuList = res.data
       console.log(res)
+    },
+    // 点击按钮，切换菜单的折叠与展开
+    toggleCollapse() {
+      this.isCollapse = !this.isCollapse
+    },
+    // 保存链接的激活状态
+    saveNavState(activePath) {
+      window.sessionStorage.getItem('activePath', activePath)
+      this.activePath = activePath
     }
   }
 }
@@ -108,8 +129,11 @@ export default {
   .toggle-button{
     background-color: #4a5064;
     font-size: 10px;
-    line-height: 50px;
-
+    line-height: 30px;
+    color: #fff;
+    text-align: center;
+    letter-spacing: .2em;
+    cursor: pointer;
   }
 }
 .el-main{
