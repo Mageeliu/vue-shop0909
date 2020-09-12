@@ -37,9 +37,12 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180px">
-          <template >
-            <el-button type="primary" icon="el-icon-edit" size="mini"></el-button>
-            <el-button type="danger" icon="el-icon-delete" size="mini"></el-button>
+          <template slot-scope="scope">
+            <!-- 编辑 -->
+            <el-button @click="showEditDialog(scope.row)" type="primary" icon="el-icon-edit" size="mini"></el-button>
+            <!-- 删除 -->
+            <el-button @click="deleteUser(scope.row.id)" type="danger" icon="el-icon-delete" size="mini"></el-button>
+            <!-- 分配角色 -->
             <el-tooltip effect="dark" content="分配角色" placement="top" :enterable="false">
               <el-button type="warning" icon="el-icon-setting" size="mini"></el-button>
             </el-tooltip>
@@ -63,6 +66,7 @@
       title="添加用户"
       :visible.sync="addDialogVisible"
       width="50%"
+      @close="addDialogClosed"
       >
       <!-- 内容主题区 -->
       <el-form label-width="70px"
@@ -89,7 +93,33 @@
       <!-- 底部区域 -->
       <span slot="footer" class="dialog-footer">
         <el-button @click="addDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="addDialogVisible = false">确 定</el-button>
+        <el-button type="primary" @click="addUser">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 修改用户对话框 -->
+    <el-dialog
+      title="修改用户信息"
+      :visible.sync="editDialogVisible"
+      width="30%"
+      >
+      <el-form label-width="70px"
+      :rules="addFormRules"
+      ref="editFormRef"
+      :model="editForm">
+        <el-form-item label="用户名">
+          <el-input v-model="editForm.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="editForm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号" prop="mobile">
+          <el-input v-model="editForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="editDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="editUser()">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -127,6 +157,7 @@ export default {
       total: 0,
       // 控制对话框的显示与隐藏
       addDialogVisible: false,
+      editDialogVisible: false,
       // 添加用户表单数据
       addForm: {
         username: '',
@@ -152,7 +183,8 @@ export default {
           { required: true, message: '请输入手机号', trigger: 'blur' },
           { validator: checkMobile, trigger: 'blur' }
         ]
-      }
+      },
+      editForm: []
     }
   },
   created() {
@@ -161,7 +193,7 @@ export default {
   methods: {
     async getUserList() {
       const { data: res } = await this.$http.get('users', { params: this.queryInfo })
-      console.log(res)
+      // console.log(res)
       if (res.meta.status !== 200) {
         return this.$message.error('获取用户列表失败')
       }
@@ -185,6 +217,65 @@ export default {
         return this.$message.error('更新状态失败')
       }
       this.$message.success('更新状态成功')
+    },
+    // 监听添加用户对话框的关闭事件
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields()
+    },
+    // 添加用户
+    addUser() {
+      this.$refs.addFormRef.validate(async valid => {
+        if (!valid) return false
+        // 发起添加用户网络请求
+        const { data: res } = await this.$http.post('users', this.addForm)
+
+        if (res.meta.status !== 201) {
+          return this.$message.error('添加用户失败！')
+        }
+        this.$message.success('添加用户成功！')
+        // 隐藏添加用户的对话框
+        this.addDialogVisible = false
+        // 重新获取列表
+        this.getUserList()
+      })
+    },
+    showEditDialog(data) {
+      this.editDialogVisible = true
+      this.editForm = data
+    },
+    editUser() {
+      this.$refs.editFormRef.validate(async valid => {
+        if (!valid) return false
+        // 修改用户
+        const { data: res } = await this.$http.put('users/' + this.editForm.id, this.editForm)
+        if (res.meta.status !== 200) {
+          return this.$message.error('修改失败!')
+        }
+        this.$message.success('修改成功!')
+        this.getUserList()
+        this.editDialogVisible = false
+      })
+    },
+    async deleteUser(id) {
+      // 询问是否删除数据
+      const confirmResult = await this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).catch(err => err)
+      // 如果用户确认删除，返回字符串 confirm
+      // 如果用户取消删除，返回字符串 cancel
+      // console.log(confirmResult)
+      if (confirmResult !== 'confirm') {
+        return this.$message.info('已取消删除')
+      }
+
+      const { data: res } = await this.$http.delete('users/' + id)
+      if (res.meta.status !== 200) {
+        return this.$message.error('删除失败!')
+      }
+      this.$message.success('删除成功!')
+      this.getUserList()
     }
   }
 }
