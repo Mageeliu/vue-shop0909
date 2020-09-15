@@ -103,7 +103,7 @@
     <el-dialog
       title="修改用户信息"
       :visible.sync="editDialogVisible"
-      width="30%"
+      width="50%"
       >
       <el-form label-width="70px"
       :rules="addFormRules"
