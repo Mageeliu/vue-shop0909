@@ -24,7 +24,8 @@ module.exports = {
     ],
     'space-before-function-paren': 0,
     'no-unused-vars': 'off',
-    'vue/no-unused-vars': 'off'
+    'vue/no-unused-vars': 'off',
+    'vue/require-render-return': 'off'
   },
 
   'extends': [

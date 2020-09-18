@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- 面包屑导航区 -->
-    <el-breadcrumb separator="/" class="el-icon-arrow-right">
+    <el-breadcrumb separator-class="el-icon-arrow-right">
       <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
       <el-breadcrumb-item>商品管理</el-breadcrumb-item>
       <el-breadcrumb-item>商品分类</el-breadcrumb-item>
@@ -43,7 +43,7 @@
         :current-page.sync="queryInfo.pagenum"
         :page-sizes="[3, 5, 10, 15]"
         :page-size="queryInfo.pagesize"
-        layout="sizes, prev, pager, next"
+        layout="total, sizes, prev, pager, next, jumper"
         :total="total">
       </el-pagination>
     </el-card>
